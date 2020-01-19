@@ -1,52 +1,92 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <link data-require="bootstrap@3.3.7" data-semver="3.3.7" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
-    <link data-require="bootstrap-css@3.*" data-semver="3.3.7" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css" />
-    <script data-require="angular.js@1.6.5" data-semver="1.6.5" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
-    <script data-require="angular-animate@1.6.*" data-semver="1.6.5" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-animate.min.js"></script>
-    <script data-require="angular-touch@1.6.*" data-semver="1.6.2" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.2/angular-touch.js"></script>
-    <script data-require="ui-bootstrap@*" data-semver="2.5.0" src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-2.5.0.js"></script>
+    <link data-require="bootstrap@3.3.7" data-semver="3.3.7" rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <link data-require="bootstrap-css@3.*" data-semver="3.3.7" rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css" />
+    <script data-require="angular.js@1.6.5" data-semver="1.6.5"
+        src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+    <script data-require="angular-animate@1.6.*" data-semver="1.6.5"
+        src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-animate.min.js"></script>
+    <script data-require="angular-touch@1.6.*" data-semver="1.6.2"
+        src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.2/angular-touch.js"></script>
+    <script data-require="ui-bootstrap@*" data-semver="2.5.0"
+        src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-2.5.0.js"></script>
 </head>
 
 <body ng-app="myApp">
-    <div ng-controller="myCtrl" >
-        <button class="btn btn-info" ng-click="open()">Renderizar pdf</button> 
+    <div ng-controller="myCtrl">
+
+        <input 
+            name="document" 
+            type="file" 
+            id="document"  
+            name="file" 
+            accept=".jpg, .jpeg, .png, .pdf"
+            onchange="angular.element(this).scope().uploadFile(this.files)" 
+            maxsize="5000" />
+
+        <button class="btn btn-info" ng-click="open()">Renderizar pdf</button>
         <div ng-if="openPDF">
-            <embed ng-src="{{pdfRender}}" ></embed>
+            <embed ng-src="{{pdfRender}}"></embed>
         </div>
     </div>
 </body>
+
 </html>
 
 <script>
     var app = angular.module('myApp', [])
-    
-    app.controller('myCtrl', function($scope, $sce, $http) {
-        
+
+    app.controller('myCtrl', function ($scope, $sce, $http) {
+
         $scope.openPDF = false
-        
-        $scope.open = function() {
+
+
+        $scope.uploadFile = function (files) {
+            var formData = new FormData();
+            formData.append("file", files[0]);
+
+            var req = {
+                method: 'POST',
+                url: 'http://localhost:3000/uploadDocument',
+                headers: {
+                    'Content-Type': undefined
+                },
+                data: formData
+            }
+
+            return $http(req).then(function (result) {
+                    console.log(result)
+                }).catch(function (error) {
+                    console.log('error', error)
+                });
+        }
+
+        $scope.open = function () {
             $http.get('http://localhost:3000/getDocument/meuarquivo')
-            .then((file) => {
-                var bytes = new Uint8Array(file.data.length);
-                for (var i = 0; i < bytes.length; i++) {
-                    bytes[i] = file.Body.data[i]
-                }
-                
-                var blob = new Blob([bytes],{type: 'application/pdf' })
-                var fileURL = URL.createObjectURL(blob)
-                var fileRender = $sce.trustAsResourceUrl(fileURL)
-                
-                $scope.pdfRender = fileRender
-                
-                $scope.openPDF = true
-                
-            }, err => {
-                console.log('Error: ' + err)
-            });
-            
+                .then((file) => {
+                    var bytes = new Uint8Array(file.data.length);
+                    for (var i = 0; i < bytes.length; i++) {
+                        bytes[i] = file.Body.data[i]
+                    }
+
+                    var blob = new Blob([bytes], {
+                        type: 'application/pdf'
+                    })
+                    var fileURL = URL.createObjectURL(blob)
+                    var fileRender = $sce.trustAsResourceUrl(fileURL)
+
+                    $scope.pdfRender = fileRender
+
+                    $scope.openPDF = true
+
+                }, err => {
+                    console.log('Error: ' + err)
+                });
+
         };
     })
-    
 </script>
