@@ -6,14 +6,15 @@ const s3Config = new AWS.S3({
     }
 })
 const fs = require('fs')
-
+const  s3bucket = '/awspath/files'
+const util = require('util')
 
 exports.uploadDocument = async (req, res, next) => {
     try {
         await uploadToS3({
             filePath: req.files[0].path,
             fileName: req.files[0].filename,
-            s3LocalStorage: '/awspath/files',
+            s3LocalStorage: s3bucket,
         })
         
         res.status(204).end()
@@ -22,6 +23,18 @@ exports.uploadDocument = async (req, res, next) => {
         res.status(500).end()
     }
 }
+
+exports.getDocument = async (req, res, next) => {
+    try {
+        const getDocument = util.promisify(getToS3)
+        return getDocument({ key: req.params.fileName + s3bucket })
+
+    } catch(err) {
+        console.error(err)
+        res.status(500).end()
+    }
+}
+
 
 function uploadToS3({ filePath, fileName, s3LocalStorage }) {
     return new Promise((resolve, reject) => {
@@ -43,3 +56,9 @@ function uploadToS3({ filePath, fileName, s3LocalStorage }) {
             })
         })
     }
+
+function getToS3(key, callback) {
+    s3Config.getObject({
+        Key: decodeComponent(key) 
+    }, callback);
+}
