@@ -28,65 +28,63 @@
             onchange="angular.element(this).scope().uploadFile(this.files)" 
             maxsize="5000" />
 
-        <button class="btn btn-info" ng-click="open()">Renderizar pdf</button>
-        <div ng-if="openPDF">
-            <embed ng-src="{{pdfRender}}"></embed>
+        <button class="btn btn-info" ng-click="open()">Abrir pdf</button>
+
+        <div>
+            <embed ng-src="{{pdfRender}}"></embed>        
         </div>
+
     </div>
 </body>
 
 </html>
 
 <script>
-    var app = angular.module('myApp', [])
+const app = angular.module('myApp', [])
 
-    app.controller('myCtrl', function ($scope, $sce, $http) {
+app.controller('myCtrl', function ($scope, $window, $sce, $http) {
 
-        $scope.openPDF = false
+$scope.uploadFile = function (files) {
+    const formData = new FormData()
+    formData.append("file", files[0])
 
+    const req = {
+        method: 'POST',
+        url: 'http://localhost:3000/uploadDocument',
+        headers: {
+            'Content-Type': undefined
+        },
+        data: formData
+    }
 
-        $scope.uploadFile = function (files) {
-            var formData = new FormData();
-            formData.append("file", files[0]);
+    return $http(req).then(function (result) {
+            console.log(result)
+        }).catch(function (error) {
+            console.log('error', error)
+        })
+}
 
-            var req = {
-                method: 'POST',
-                url: 'http://localhost:3000/uploadDocument',
-                headers: {
-                    'Content-Type': undefined
-                },
-                data: formData
+$scope.open = function () {
+    $http.get('http://localhost:3000/getDocument/meuarquivo')
+        .then((file) => {
+            const bytes = new Uint8Array(file.data.length)
+            for (const i = 0; i < bytes.length; i++) {
+                bytes[i] = file.Body.data[i]
             }
 
-            return $http(req).then(function (result) {
-                    console.log(result)
-                }).catch(function (error) {
-                    console.log('error', error)
-                });
-        }
+            const blob = new Blob([bytes], {
+                type: 'application/pdf'
+            })
+            const fileURL = URL.createObjectURL(blob)
+            const fileRender = $sce.trustAsResourceUrl(fileURL)
 
-        $scope.open = function () {
-            $http.get('http://localhost:3000/getDocument/meuarquivo')
-                .then((file) => {
-                    var bytes = new Uint8Array(file.data.length);
-                    for (var i = 0; i < bytes.length; i++) {
-                        bytes[i] = file.Body.data[i]
-                    }
+            $scope.pdfRender = fileRender;
 
-                    var blob = new Blob([bytes], {
-                        type: 'application/pdf'
-                    })
-                    var fileURL = URL.createObjectURL(blob)
-                    var fileRender = $sce.trustAsResourceUrl(fileURL)
+            return $window.open(fileRender, '_blank');
 
-                    $scope.pdfRender = fileRender
-
-                    $scope.openPDF = true
-
-                }, err => {
-                    console.log('Error: ' + err)
-                });
-
-        };
-    })
+        }, err => {
+            console.log('Error: ' + err)
+        })
+}
+})
 </script>
