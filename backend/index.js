@@ -4,9 +4,8 @@ const port = 3000
 const multer = require('./middlewares/multer')
 const helper = require('./helper')
 
-
 app.use(express.json())
-app.use(multer)
+app.use('/uploadDocument', multer)
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*")
@@ -21,5 +20,5 @@ app.post('/uploadDocument',
 )
 
 app.get('/getDocument/:fileName',
-(...args) => helper.getDocument(...args)
+    helper.getDocument.bind(this)
 )

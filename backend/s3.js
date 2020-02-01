@@ -6,12 +6,8 @@ const s3Config = new AWS.S3({
     }
 })
 
-exports.uploadToS3 = ({ Body, Key, ACL }) => {
-    return s3Config.putObject({
-        Key,
-        Body,
-        ACL
-    }).promise()
+exports.uploadToS3 = (params) => {
+    return s3Config.putObject(params).promise()
 }
 
 exports.getToS3 = (key) => {

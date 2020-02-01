@@ -1,22 +1,25 @@
 const  s3bucket = '/awspath/files'
 const { uploadToS3, getToS3 } = require('./s3')
+const debug = require('debug')('upload-debug')
 
-exports.uploadDocument = async (req, res, next) => {
+exports.uploadDocument = async (req, res) => {
     try {
+        const [{ buffer, originalname }] = req.files
+        
         await uploadToS3({
-            Body: req.files[0].buffer,
-            Key: s3bucket + req.files[0].originalname,
+            Body: buffer,
+            Key: s3bucket + originalname,
             ACL: 'private'
         })
         
         res.status(204).end()
     } catch(err) {
-        console.error(err)
+        debug('erro', err)
         res.status(500).end()
     }
 }
 
-exports.getDocument = async (req, res, next) => {
+exports.getDocument = async (req, res) => {
     try {
         const file = await getToS3({
             key: req.params.fileName + s3bucket
@@ -24,7 +27,7 @@ exports.getDocument = async (req, res, next) => {
 
         return file
     } catch(err) {
-        console.error(err)
+        debug('erro', err)
         res.status(500).end()
     }
 }
